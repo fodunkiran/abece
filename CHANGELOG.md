@@ -9,6 +9,8 @@ part of the public contract: a change to either is a breaking change.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-27
+
 ### Added
 
 - `nfc` and `is_nfc`: canonical composition with a fast path for ASCII and
@@ -36,4 +38,5 @@ part of the public contract: a change to either is a breaking change.
   weekday names and dates written out.
 - Features: `std` (default), `serde`, `jiff`.
 
-[Unreleased]: https://github.com/fodunkiran/abece/commits/main
+[Unreleased]: https://github.com/fodunkiran/abece/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/fodunkiran/abece/releases/tag/v0.1.0
