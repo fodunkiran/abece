@@ -93,3 +93,9 @@ pub mod prelude {
     pub use crate::sort::{CaseRule, compare, sort_key};
     pub use crate::token::{WordOptions, words};
 }
+
+// The README's example runs with the doc tests, so that the first code a
+// reader sees cannot drift from the crate. The item exists only then.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+pub struct ReadmeDoctests;
