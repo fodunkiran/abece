@@ -1,0 +1,16 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 79a9e9b8c7bbd414c0bd39824f643b3723b28dee82bb254ced549b01c6788838 # shrinks to year = 0, month = 1, day = 1
+cc cb8b9aa01d05b8390624a9d1bd3095cfa3a918c355c741e6371ed89f0010620e # shrinks to s = "ß", o = FoldOptions { merge_dotless_i: false, accents: Keep, strip_marks: false }
+cc 83e5c7aee4129446db2c7d3d9fe1325c8ae3d9c5a00809fe8d153c4489c5dcff # shrinks to s = "\u{327}", o = FoldOptions { merge_dotless_i: false, accents: Keep, strip_marks: true }
+cc 5c5d7348fc8513b7d646012cd4e15579c62f93c2edb2962544ec373e298abc5c # shrinks to s = "ŞW"
+cc e054646971223faae771a161f9f089ee7afa141b1e2feee3b5ac477065f52342 # shrinks to n = 9366656241297091000, i = 0
+cc cd94c8029c843dc16096c4dcc609536277f8edfe42cc3e60f470b44942501170 # shrinks to a = "ﬁß", b = ""
+cc 36ef4eca2858ef0b61215cecf487179105aa1498f208911815d8b3ff3fb432ac # shrinks to s = "İ\u{308}", o = FoldOptions { merge_dotless_i: false, accents: Keep, strip_marks: false }
+cc 0b59a83f2a7d1b5073a677777f5ee336f832249b34dcc9ad83aa84c2a77f2f3f # shrinks to s = "ﬁ\u{307}0", o = FoldOptions { merge_dotless_i: false, accents: Keep, strip_marks: false }
+cc 7ab1afcc47be16ee324a6ce80c604883512029e9b6a7063b8ba838abeb9e3881 # shrinks to s = "H\u{331}", o = FoldOptions { merge_dotless_i: false, accents: Keep, strip_marks: false }
+cc e660d596a455d4f359ac82151fb8e52fe7791f5852ee8a2c1f47a34fc643a408 # shrinks to s = "I", o = FoldOptions { merge_dotless_i: false, accents: FoldAll, strip_marks: false }
