@@ -43,6 +43,18 @@ icu_locale_core = "2.4"
 jiff = "0.2"
 proptest = { version = "1.12", default-features = false, features = ["std"] }
 
+[[bench]]
+name = "case"
+harness = false
+
+[[bench]]
+name = "fold"
+harness = false
+
+[[bench]]
+name = "sort"
+harness = false
+
 [lints.rust]
 unsafe_code = "forbid"
 missing_docs = "warn"
