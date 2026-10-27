@@ -58,6 +58,7 @@ mod fold;
 mod nfc;
 mod offset_map;
 mod sort;
+mod token;
 
 pub use case::{
     cmp_ignore_case, eq_ignore_case, lowercase, lowercase_with_map, titlecase, uppercase,
@@ -69,6 +70,9 @@ pub use fold::{
 pub use nfc::{is_nfc, nfc};
 pub use offset_map::OffsetMap;
 pub use sort::{CaseRule, ORDER, compare, compare_in, sort_key, sort_key_in};
+pub use token::{
+    Token, Tokens, WordOptions, join_initials, tokenize, tokenize_stems, words, words_with,
+};
 
 /// The names most programs need, for a glob import.
 ///
@@ -83,4 +87,5 @@ pub mod prelude {
     pub use crate::fold::{Accents, FoldOptions, accent_fold, ascii_fold, search_fold};
     pub use crate::nfc::nfc;
     pub use crate::sort::{CaseRule, compare, sort_key};
+    pub use crate::token::{WordOptions, words};
 }
