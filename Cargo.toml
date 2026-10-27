@@ -42,6 +42,7 @@ icu_collator = "2.4"
 icu_locale_core = "2.4"
 jiff = "0.2"
 proptest = { version = "1.12", default-features = false, features = ["std"] }
+serde_json = "1.0"
 
 [[bench]]
 name = "case"

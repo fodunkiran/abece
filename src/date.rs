@@ -277,6 +277,11 @@ impl Weekday {
 /// A calendar date: a year, a month and a day of the proleptic Gregorian
 /// calendar, valid by construction.
 ///
+/// With the `serde` feature a `Date` is written as its three fields,
+/// `{"year":2026,"month":"July","day":25}` in JSON, and read back through
+/// the same check as [`from_parts`](Self::from_parts): a 31 February is an
+/// error, not a `Date`.
+///
 /// ```
 /// use abece::date::{Date, Month, Weekday};
 ///
@@ -287,7 +292,7 @@ impl Weekday {
 /// assert_eq!(Date::new(2026, 2, 29), None);
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Date {
     year: i32,
     month: Month,
@@ -447,6 +452,30 @@ impl Date {
         let month = i8::try_from(self.month.number()).ok()?;
         let day = i8::try_from(self.day).ok()?;
         jiff::civil::Date::new(year, month, day).ok()
+    }
+}
+
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+impl<'de> serde::Deserialize<'de> for Date {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        // The fields as the derived `Serialize` writes them, under the same
+        // name, so that every format reads back what it wrote.
+        #[derive(serde::Deserialize)]
+        #[serde(rename = "Date")]
+        struct Fields {
+            year: i32,
+            month: Month,
+            day: u8,
+        }
+
+        let Fields { year, month, day } = Fields::deserialize(deserializer)?;
+        Self::from_parts(year, month, day).ok_or_else(|| {
+            serde::de::Error::custom(format_args!(
+                "no such day: {year}-{:02}-{day:02}",
+                month.number()
+            ))
+        })
     }
 }
 

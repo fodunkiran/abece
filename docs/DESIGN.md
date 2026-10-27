@@ -203,12 +203,14 @@ that (a handful of Arabic presentation forms).
   `alloc`, which keeps this crate `no_std` too.
 - `serde` (optional) derives `Serialize` and `Deserialize` for the option
   and date types, for programs that keep fold settings or dates in
-  configuration.
+  configuration. `Date` alone reads its fields by hand, through the same
+  check as `Date::from_parts`, so that no deserialized date is invalid.
 - `jiff` (optional) converts between this crate's `Date` and `Weekday` and
   jiff's, for programs that keep their dates in jiff.
 - `criterion`, `icu_casemap`, `icu_collator`, `icu_locale_core`,
-  `focaccia` and `proptest` are development dependencies: the benchmark
-  competitors and the property tests. None reaches a user of the crate.
+  `focaccia`, `proptest` and `serde_json` are development dependencies:
+  the benchmark competitors, the property tests and the serde format
+  tests. None reaches a user of the crate.
 
 ## Stability
 
