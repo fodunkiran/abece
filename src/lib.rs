@@ -54,6 +54,7 @@
 extern crate alloc;
 
 mod case;
+pub mod date;
 mod fold;
 pub mod letters;
 mod nfc;
