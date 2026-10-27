@@ -55,9 +55,12 @@ extern crate alloc;
 
 mod case;
 mod fold;
+pub mod letters;
 mod nfc;
+pub mod number;
 mod offset_map;
 mod sort;
+pub mod suffix;
 mod token;
 
 pub use case::{
