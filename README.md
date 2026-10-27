@@ -58,9 +58,12 @@ them. What they do not offer is the rest of the job:
   and a result page shows the original; `search_fold_with_map` returns the
   offsets that connect the two. ICU4X's `fold_turkic_string` folds; it
   cannot say where a match came from.
-- **A sort key.** `icu_collator` compares two strings; it exports no key,
-  and a database column needs one. `sort_key` is a string whose plain byte
-  order is the Turkish alphabet's, stored once and indexed.
+- **A sort key that stays put.** `icu_collator` writes sort keys too, but
+  as bytes that ICU4X says to presume invalidated by any CLDR, Unicode or
+  ICU4X update, with no promise to keep the old algorithm. `sort_key` is a
+  string (ASCII for Latin and Turkish text) whose plain byte order is the
+  Turkish alphabet's, stored once in an ordinary text column and indexed,
+  and its output is covered by the stability promise below.
 - **The search fold's rule.** Merging `ı` into `i` while keeping `ş` apart
   from `s` is not a Unicode operation; it is a choice about how people type
   Turkish on the wrong keyboard (see [docs/DESIGN.md](docs/DESIGN.md)).

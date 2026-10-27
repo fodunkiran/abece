@@ -1,6 +1,6 @@
 //! The sort key and the comparator: abece against ICU4X's collator with
-//! the Turkish locale (which compares but exports no key), on single
-//! comparisons and on sorting a list of titles.
+//! the Turkish locale, on single comparisons and on sorting a list of
+//! titles.
 #![allow(
     clippy::unwrap_used,
     clippy::expect_used,

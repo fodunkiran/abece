@@ -14,13 +14,15 @@ lowers Turkish text that way loses the difference between `ısı` (heat) and
 `isi` (soot), indexes `İSTANBUL` under `i̇stanbul`, and sorts `Çalıkuşu`
 after `Zeki`.
 
-ICU4X (`icu_casemap`) and `focaccia` map and fold with the Turkic rules.
-Neither offers what a program that stores Turkish text needs on top of
-that: a search fold with a byte map back to the original spelling, a sort
-key a database can index, name tokenizing with joined initials, and the
-small jobs (suffixes, numbers, dates) that come with writing Turkish. This
-crate does those, and holds the two outputs that get stored (the search
-fold and the sort key) stable.
+ICU4X (`icu_casemap`) and `focaccia` map and fold with the Turkic rules,
+and ICU4X's `icu_collator` writes sort keys, though ones it says to
+presume invalidated by any CLDR, Unicode or ICU4X update. None of them
+offers what a program that stores Turkish text needs on top of that: a
+search fold with a byte map back to the original spelling, a sort key that
+stays the same from one release to the next, name tokenizing with joined
+initials, and the small jobs (suffixes, numbers, dates) that come with
+writing Turkish. This crate does those, and holds the two outputs that get
+stored (the search fold and the sort key) stable.
 
 ## One pipeline for every fold
 
