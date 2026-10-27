@@ -14,3 +14,4 @@ cc 36ef4eca2858ef0b61215cecf487179105aa1498f208911815d8b3ff3fb432ac # shrinks to
 cc 0b59a83f2a7d1b5073a677777f5ee336f832249b34dcc9ad83aa84c2a77f2f3f # shrinks to s = "ﬁ\u{307}0", o = FoldOptions { merge_dotless_i: false, accents: Keep, strip_marks: false }
 cc 7ab1afcc47be16ee324a6ce80c604883512029e9b6a7063b8ba838abeb9e3881 # shrinks to s = "H\u{331}", o = FoldOptions { merge_dotless_i: false, accents: Keep, strip_marks: false }
 cc e660d596a455d4f359ac82151fb8e52fe7791f5852ee8a2c1f47a34fc643a408 # shrinks to s = "I", o = FoldOptions { merge_dotless_i: false, accents: FoldAll, strip_marks: false }
+cc 0f52c65e4cf0df6d7f102f2b21173af85dfac71cc4f2ca6b4b8902fa8a863598 # shrinks to s = "i\u{307}\u{300}", o = FoldOptions { merge_dotless_i: false, accents: Keep, strip_marks: false }

@@ -58,20 +58,23 @@ characters, which keeps the tables small; the case-preserving `accent_fold`
 and `ascii_fold` run a separate pass with upper-case tables.
 
 The output is NFC except in one corner, kept on purpose: a combining mark
-that did not compose with the letter before it may compose with that
-letter's lower case. `İ` + U+0308 lowers to `i` + U+0308, which NFC
-composes into `ï`; `H` + U+0331 lowers to `h` + U+0331, which composes into
-`ẖ` (there is no capital with that mark); `ı` + U+0307 folds, with the
-merge, to `i` + U+0307, which the dot rule drops. So folding such output
-again changes it. The fold's output is stored (a full-text index is built
-from it, and `ı` + U+0307 folding to `i` + U+0307 is one of its fixed test
-vectors), so recomposing now would change the key of such text under the
-stability promise. No real text has been seen to contain it; a caller that
-needs NFC output calls `nfc` on it. `uppercase` and `titlecase`, which
-nothing stores, do recompose after a letter that expands (`ß` + U+0327 is
-`SŞ` in upper case); the title case of a ligature followed by a mark (`ﬁ`
-+ U+0307) still lands on an `i` + U+0307 that the next pass drops, the
-same corner from the other side.
+that did not compose with the letter before it may compose once the fold
+has changed that letter or removed what stood between them. `İ` + U+0308
+lowers to `i` + U+0308, which NFC composes into `ï`; `H` + U+0331 lowers
+to `h` + U+0331, which composes into `ẖ` (there is no capital with that
+mark); `ı` + U+0307 folds, with the merge, to `i` + U+0307, which the dot
+rule drops; and the dot rule does the same to the mark after the dot:
+`i` + U+0307 + U+0300 loses its dot and leaves `i` + U+0300, which
+composes into `ì`. So folding such output again changes it. The fold's
+output is stored (a full-text index is built from it, and `ı` + U+0307
+folding to `i` + U+0307 is one of its fixed test vectors), so recomposing
+now would change the key of such text under the stability promise. No
+real text has been seen to contain it; a caller that needs NFC output
+calls `nfc` on it. `uppercase` and `titlecase`, which nothing stores, do
+recompose after a letter that expands (`ß` + U+0327 is `SŞ` in upper
+case); the title case of a ligature followed by a mark (`ﬁ` + U+0307)
+still lands on an `i` + U+0307 that the next pass drops, the same corner
+from the other side.
 
 ### Why `ı` merges in search and `ş` stays
 

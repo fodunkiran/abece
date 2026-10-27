@@ -667,6 +667,23 @@ mod tests {
     }
 
     #[test]
+    fn the_mark_after_a_dropped_dot_stays_as_it_is() {
+        // The corner docs/DESIGN.md keeps: the dot rule leaves `i` + U+0300
+        // rather than composing it into `ì`, because the output is stored.
+        assert_eq!(search_fold("i\u{307}\u{300}"), "i\u{300}");
+        assert_eq!(
+            search_fold_with("i\u{307}\u{300}", &FoldOptions::LOWERCASE),
+            "i\u{300}"
+        );
+        assert_eq!(
+            fold_with_map("i\u{307}\u{300}", &FoldOptions::SEARCH).0,
+            "i\u{300}"
+        );
+        // Folded again, NFC runs first and composes it.
+        assert_eq!(search_fold("i\u{300}"), "ì");
+    }
+
+    #[test]
     fn folded_text_is_borrowed() {
         assert!(matches!(search_fold("istanbul 2026"), Cow::Borrowed(_)));
         assert!(matches!(search_fold("şahin çağri"), Cow::Borrowed(_)));

@@ -44,19 +44,26 @@ fn options() -> impl Strategy<Value = FoldOptions> {
     })
 }
 
-/// Whether `s` has a combining mark right after a letter whose case
-/// mapping changes it (a capital, `ı`, or a letter that expands such as
-/// `ß` and `ﬁ`): the one kind of input the folds are not idempotent on,
-/// because the mapped letter may compose with the mark where the original
-/// did not (`H` + U+0331 lowers to `h` + U+0331, which NFC composes). Kept
-/// that way so that stored keys never change (see docs/DESIGN.md).
-fn has_a_mark_after_a_case_change(s: &str) -> bool {
+/// Whether `s` has a combining mark that a fold may bring next to a letter
+/// it composes with: a mark right after a letter whose case mapping changes
+/// it (a capital, `ı`, or a letter that expands such as `ß` and `ﬁ`), or a
+/// mark right after the dot above that the dot rule drops from `i` + U+0307.
+/// These are the inputs the folds are not idempotent on, because the mark
+/// may compose where it did not before (`H` + U+0331 lowers to `h` + U+0331,
+/// which NFC composes; `i` + U+0307 + U+0300 loses its dot and leaves `i` +
+/// U+0300, which NFC composes into `ì`). Kept that way so that stored keys
+/// never change (see docs/DESIGN.md).
+fn has_a_mark_the_fold_may_compose(s: &str) -> bool {
+    use unicode_normalization::char::is_combining_mark;
     let chars: Vec<char> = s.chars().collect();
-    chars.windows(2).any(|pair| {
+    let after_a_case_change = chars.windows(2).any(|pair| {
         let expands = pair[0].to_uppercase().count() > 1 || pair[0].to_lowercase().count() > 1;
-        (pair[0].is_uppercase() || pair[0] == 'ı' || expands)
-            && unicode_normalization::char::is_combining_mark(pair[1])
-    })
+        (pair[0].is_uppercase() || pair[0] == 'ı' || expands) && is_combining_mark(pair[1])
+    });
+    let after_a_dropped_dot = chars
+        .windows(3)
+        .any(|run| matches!(run[0], 'i' | 'İ') && run[1] == '\u{307}' && is_combining_mark(run[2]));
+    after_a_case_change || after_a_dropped_dot
 }
 
 /// Sakamoto's weekday algorithm, as an independent reference.
@@ -76,7 +83,7 @@ proptest! {
     #![proptest_config(ProptestConfig::with_cases(1000))]
 
     #[test]
-    fn folds_are_idempotent(s in text().prop_filter("a mark after a letter whose case changes", |s| !has_a_mark_after_a_case_change(s)), o in options()) {
+    fn folds_are_idempotent(s in text().prop_filter("a mark the fold may compose", |s| !has_a_mark_the_fold_may_compose(s)), o in options()) {
         let once = lowercase(&s);
         prop_assert_eq!(lowercase(&once).into_owned(), once.into_owned());
         let once = search_fold(&s);
