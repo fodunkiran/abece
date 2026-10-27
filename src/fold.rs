@@ -182,7 +182,8 @@ impl FoldOptions {
 
     /// Whether combining marks that survived NFC are dropped (step 2 of the
     /// pipeline): a mark on a letter that has no composed form with it, such
-    /// as the macron below in `s` + U+0331.
+    /// as the macron below in `s` + U+0331, or one that another mark holds
+    /// apart from its letter.
     ///
     /// ```
     /// use abece::{FoldOptions, search_fold_with};
@@ -494,9 +495,11 @@ pub(crate) fn fold_cow<'a>(text: &'a str, options: &FoldOptions) -> Cow<'a, str>
 
 /// The fold of NFC `text`, or `None` when the fold would change nothing.
 ///
-/// The output is NFC too: a letter that folds to several (`ß` to `ss`)
-/// could only compose with a combining mark that follows, and the accent
-/// folds that expand letters drop every mark.
+/// The output is NFC except in the corner docs/DESIGN.md keeps, a mark that
+/// the fold brings next to a letter it composes with. Expansions open no
+/// other: a letter that folds to several (`ß` to `ss`) could only compose
+/// with a combining mark that follows, and the accent folds that expand
+/// letters drop every mark.
 fn fold_if_changed(text: &str, options: &FoldOptions) -> Option<String> {
     let mut out: Option<String> = None;
     let mut state = State::default();
@@ -525,7 +528,7 @@ fn fold_if_changed(text: &str, options: &FoldOptions) -> Option<String> {
 /// `out` composed again when a character expanded into several (`ß` to
 /// `SS`) and a mark that follows may compose with the last of them
 /// (`S` + U+0327 is `Ş`); the output is then NFC like the input, and
-/// mapping it again changes nothing.
+/// mapping it again changes nothing outside the corner docs/DESIGN.md keeps.
 pub(crate) fn recomposed(out: String, expanded: bool) -> String {
     if !expanded {
         return out;

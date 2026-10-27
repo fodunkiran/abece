@@ -35,7 +35,8 @@ run the same per-character pipeline on the NFC form of the text:
    by accident, and dropping it would change `ı̇` into a different word.
 2. **Other combining marks** are dropped when `strip_marks` is on. After
    NFC, a mark that is still separate is one that has no composed form with
-   its base (`s` + U+0331); it is noise from a PDF or an OCR pass more often
+   its base (`s` + U+0331), or one that another mark holds apart from it
+   (`i` + U+0307 + U+0300); it is noise from a PDF or an OCR pass more often
    than a letter.
 3. **The Turkish lower case.** `I` becomes `ı`, `İ` becomes `i`, and every
    other character takes the Unicode default mapping, character by
