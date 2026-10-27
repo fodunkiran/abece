@@ -10,7 +10,7 @@ documentation = "https://docs.rs/abece"
 readme = "README.md"
 keywords = ["turkish", "unicode", "case-folding", "collation", "i18n"]
 categories = ["text-processing", "internationalization", "localization", "no-std"]
-exclude = [".github/", ".gitignore"]
+exclude = [".github/", ".gitignore", "rust-toolchain.toml"]
 
 [package.metadata.docs.rs]
 all-features = true
