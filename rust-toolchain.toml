@@ -1,0 +1,5 @@
+# The compiler every machine and CI build with. Bumped on purpose, in its own
+# commit. The minimum the crate supports is `rust-version` in Cargo.toml.
+[toolchain]
+channel = "1.99.0"
+components = ["clippy", "rustfmt"]

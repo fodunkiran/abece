@@ -1,0 +1,6 @@
+# A failing test should panic; the no-panic lints in Cargo.toml do not apply
+# to test functions.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-indexing-slicing-in-tests = true

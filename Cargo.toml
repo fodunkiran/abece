@@ -1,0 +1,62 @@
+[package]
+name = "abece"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Turkish text handling: dotted and dotless i case mapping, search and accent folding, a Turkish-alphabet sort key, suffixes, numbers and dates in words"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/fodunkiran/abece"
+documentation = "https://docs.rs/abece"
+readme = "README.md"
+keywords = ["turkish", "unicode", "case-folding", "collation", "i18n"]
+categories = ["text-processing", "internationalization", "localization", "no-std"]
+exclude = [".github/", ".gitignore"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[features]
+default = ["std"]
+# Nothing in the crate needs the standard library; the feature exists so that
+# `--no-default-features` builds for `no_std` targets with `alloc`.
+std = ["unicode-normalization/std"]
+# `Serialize` and `Deserialize` for the option and date types.
+serde = ["dep:serde"]
+# Conversions between this crate's `Date` and `Weekday` and jiff's.
+jiff = ["dep:jiff"]
+
+[dependencies]
+# The only required dependency: NFC composition, the first step of every
+# fold, and the compatibility decomposition behind accent folding. The crate
+# carries the Unicode tables that `core` lacks; it is `no_std` with `alloc`.
+unicode-normalization = { version = "0.1.26", default-features = false }
+serde = { version = "1.0", default-features = false, features = ["derive"], optional = true }
+jiff = { version = "0.2", default-features = false, optional = true }
+
+[dev-dependencies]
+criterion = { version = "0.8", default-features = false, features = ["cargo_bench_support"] }
+focaccia = "2.5"
+icu_casemap = "2.4"
+icu_collator = "2.4"
+icu_locale_core = "2.4"
+jiff = "0.2"
+proptest = { version = "1.12", default-features = false, features = ["std"] }
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+# No-panic policy, enforced by the compiler rather than by convention. Tests
+# are exempt through clippy.toml.
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+unreachable = "deny"
+indexing_slicing = "deny"          # .get() instead of [i]
+string_slice = "deny"              # byte slicing panics on a UTF-8 boundary
+arithmetic_side_effects = "warn"   # checked_ or saturating_ where overflow is possible
+wildcard_enum_match_arm = "warn"   # domain enums are matched exhaustively
