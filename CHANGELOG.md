@@ -31,8 +31,10 @@ part of the public contract: a change to either is a breaking change.
   `Token`, `WordOptions`: words for matching, with dotted initials joined.
 - `letters`: the alphabet, its vowel classes and consonants.
 - `suffix`: `attach`, `attach_spoken`, `suffix_for`, `Harmony`, `Suffix`:
-  suffixes on proper nouns, numbers and abbreviations with the apostrophe
-  and vowel harmony.
+  suffixes on proper nouns, numbers (thousands grouped with dots read as
+  one number) and abbreviations (dotted initials and single capital
+  letters spelled out, the last word of a name deciding) with the
+  apostrophe and vowel harmony.
 - `number`: `to_words`, `to_words_signed`, `ordinal`: numbers in words.
 - `date`: `Date`, `Month`, `Weekday`, `DateStyle`, `format_range`: month and
   weekday names and dates written out.

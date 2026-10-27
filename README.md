@@ -41,7 +41,7 @@ assert_eq!(attach("2026", Suffix::Dative), "2026'ya");
 | Order | `sort_key`, `sort_key_in`, `compare`, `compare_in`, `CaseRule` | A storable key whose byte order is the alphabet's; a comparator that builds no key |
 | Words | `words`, `tokenize`, `tokenize_stems`, `join_initials`, `WordOptions` | Name matching: "DENİZ GIDA LTD.ŞTİ." is `deniz gida ltd sti`, "A.Ş." is `as` |
 | Letters | `letters::is_vowel`, `is_back_vowel`, `is_voiceless_consonant`, `ALPHABET`, … | The 29 letters and their classes |
-| Suffixes | `suffix::attach`, `attach_spoken`, `Harmony`, `Suffix` | Proper nouns, numbers and abbreviations: "TBMM'ye", "5'te", "Ahmetler" |
+| Suffixes | `suffix::attach`, `attach_spoken`, `Harmony`, `Suffix` | Proper nouns, numbers and abbreviations: "TBMM'ye", "A.Ş.'ye", "1.000'e", "5'te", "Ahmetler" |
 | Numbers | `number::to_words`, `to_words_signed`, `ordinal` | "iki bin yirmi altı", "dördüncü" |
 | Dates | `date::Date`, `Month`, `Weekday`, `DateStyle`, `format_range` | "25 Temmuz 2026 Cumartesi", "20 Temmuz – 31 Ağustos 2026" |
 

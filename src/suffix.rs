@@ -113,10 +113,13 @@ impl Harmony {
     }
 
     /// The analysis of `word` as [`attach`] reads it: a word that ends in
-    /// digits sounds like the number in words ("2026" ends in "altı"); an
-    /// abbreviation in capitals that cannot be read as a word sounds like
-    /// the name of its last letter ("TBMM" ends in "me", "ABD" in "de");
-    /// anything else is read as it is written.
+    /// digits sounds like the number in words ("2026" ends in "altı",
+    /// "1.000" in "bin"); an abbreviation in capitals that cannot be read as
+    /// a word, one written as dotted initials, or a single capital letter
+    /// sounds like the name of its last letter ("TBMM" ends in "me", "ABD"
+    /// in "de", "A.Ş." in "şe", "Plan B" in "be"); anything else is read as
+    /// it is written. Of several words, the last one decides: "Deniz Gıda
+    /// A.Ş." is read by "A.Ş.", "A. Ş." by "Ş", "Ahmet K." by "K".
     ///
     /// Which capitalised words are spelled out is a heuristic: a word of
     /// two letters, one without a vowel, or one whose letters do not form
@@ -129,8 +132,11 @@ impl Harmony {
     ///
     /// assert_eq!(Harmony::of_word("2026").suffix(Suffix::Locative), "da");
     /// assert_eq!(Harmony::of_word("5").suffix(Suffix::Locative), "te");
+    /// assert_eq!(Harmony::of_word("1.000").suffix(Suffix::Dative), "e");
     /// assert_eq!(Harmony::of_word("TBMM").suffix(Suffix::Dative), "ye");
     /// assert_eq!(Harmony::of_word("NATO").suffix(Suffix::Dative), "ya");
+    /// assert_eq!(Harmony::of_word("Deniz Gıda A.Ş.").suffix(Suffix::Dative), "ye");
+    /// assert_eq!(Harmony::of_word("Ahmet K.").suffix(Suffix::Genitive), "nin");
     /// ```
     #[must_use]
     pub fn of_word(word: &str) -> Self {
@@ -138,7 +144,7 @@ impl Harmony {
         if trimmed.ends_with(|c: char| c.is_ascii_digit()) {
             return Self::of(&number_words(trimmed));
         }
-        if let Some(name) = spelled_out_last_letter(trimmed) {
+        if let Some(name) = spelled_out_last_letter(last_word(trimmed)) {
             return Self::of(name);
         }
         Self::of(trimmed)
@@ -329,7 +335,9 @@ impl Harmony {
 /// assert_eq!(attach("Ahmet", Suffix::Plural), "Ahmetler");
 /// assert_eq!(attach("2026", Suffix::Locative), "2026'da");
 /// assert_eq!(attach("1990", Suffix::Plural), "1990'lar");
+/// assert_eq!(attach("1.000", Suffix::Dative), "1.000'e");
 /// assert_eq!(attach("TBMM", Suffix::Dative), "TBMM'ye");
+/// assert_eq!(attach("Deniz Gıda A.Ş.", Suffix::Dative), "Deniz Gıda A.Ş.'ye");
 /// assert_eq!(attach("İstanbul", Suffix::LocativeRelative), "İstanbul'daki");
 /// ```
 #[must_use]
@@ -384,11 +392,45 @@ fn join(word: &str, suffix: &str, apostrophe: bool) -> String {
     out
 }
 
-/// Whether `word` ends in a digit or is a run of capitals, which take the
-/// apostrophe before every suffix, the plural included.
+/// Whether `word` ends in a digit or its last word is a run of capitals,
+/// of dotted initials or a single capital letter, which take the apostrophe
+/// before every suffix, the plural included.
 fn is_number_or_abbreviation(word: &str) -> bool {
     let trimmed = word.trim_end_matches(|c: char| !c.is_alphanumeric());
-    trimmed.ends_with(|c: char| c.is_ascii_digit()) || is_all_capitals(trimmed)
+    let last = last_word(trimmed);
+    trimmed.ends_with(|c: char| c.is_ascii_digit())
+        || is_all_capitals(last)
+        || is_dotted_initials(last)
+        || is_single_capital(last)
+}
+
+/// The last word of `text`: what follows its last whitespace.
+fn last_word(text: &str) -> &str {
+    text.rsplit(char::is_whitespace).next().unwrap_or(text)
+}
+
+/// Whether `word` is two or more capital initials, each but the last
+/// followed by a dot: "A.Ş", "T.C", "A.B.D" (the caller has trimmed the
+/// last dot).
+fn is_dotted_initials(word: &str) -> bool {
+    let mut initials = 0_usize;
+    for part in word.split('.') {
+        if !is_single_capital(part) {
+            return false;
+        }
+        initials = initials.saturating_add(1);
+    }
+    initials >= 2
+}
+
+/// Whether `word` is one capital letter: an initial ("K" of "Ahmet K.",
+/// "Ş" of "A. Ş.") or a letter on its own ("Plan B").
+fn is_single_capital(word: &str) -> bool {
+    let mut chars = word.chars();
+    matches!(
+        (chars.next(), chars.next()),
+        (Some(c), None) if c.is_alphabetic() && !c.is_lowercase()
+    )
 }
 
 /// Whether `word` is letters only, all capitals, at least two of them.
@@ -407,11 +449,7 @@ fn is_all_capitals(word: &str) -> bool {
 /// is read by its last eighteen digits, which carry its last word unless
 /// they are all zero.
 fn number_words(word: &str) -> String {
-    let digits = word.trim_end_matches(|c: char| !c.is_ascii_digit());
-    let start = digits
-        .rfind(|c: char| !c.is_ascii_digit())
-        .map_or(0, |i| i.saturating_add(1));
-    let digits = digits.get(start..).unwrap_or("");
+    let digits = last_number(word.trim_end_matches(|c: char| !c.is_ascii_digit()));
     let tail = digits.len().saturating_sub(18);
     let number = digits
         .get(tail..)
@@ -420,9 +458,48 @@ fn number_words(word: &str) -> String {
     to_words(number)
 }
 
+/// The digits of the number `text` ends in, without the dots of a
+/// thousands grouping: "1000" of "1.000", "2026" of "E.2026". Dots that do
+/// not group thousands end the number ("2026" of "25.07.2026").
+fn last_number(text: &str) -> String {
+    let digits_and_dots = text.trim_end_matches(|c: char| c.is_ascii_digit() || c == '.');
+    let candidate = text
+        .get(digits_and_dots.len()..)
+        .unwrap_or("")
+        .trim_start_matches('.');
+    if let Some(grouped) = thousands_grouped(candidate) {
+        return grouped;
+    }
+    let before_digits = text.trim_end_matches(|c: char| c.is_ascii_digit());
+    text.get(before_digits.len()..).unwrap_or("").into()
+}
+
+/// The digits of `number` without its dots when it is grouped in
+/// thousands, one to three digits and then groups of three ("1.000",
+/// "250.000"); `None` otherwise. `number` holds only ASCII digits and dots.
+fn thousands_grouped(number: &str) -> Option<String> {
+    let mut groups = number.split('.');
+    let first = groups
+        .next()
+        .filter(|group| (1..=3).contains(&group.len()))?;
+    let mut digits = String::from(first);
+    let mut grouped = false;
+    for group in groups {
+        if group.len() != 3 {
+            return None;
+        }
+        digits.push_str(group);
+        grouped = true;
+    }
+    grouped.then_some(digits)
+}
+
 /// The name of the last letter of `word` when `word` is an abbreviation
 /// read letter by letter; `None` when it is read as a word.
 fn spelled_out_last_letter(word: &str) -> Option<&'static str> {
+    if is_single_capital(word) || is_dotted_initials(word) {
+        return word.chars().last().map(|c| letter_name(lowercase_char(c)));
+    }
     if !is_all_capitals(word) {
         return None;
     }
@@ -697,6 +774,54 @@ mod tests {
     }
 
     #[test]
+    fn a_number_grouped_in_thousands_is_read_as_one_number() {
+        let expected = [
+            ("1.000", "1.000'e", "1.000'de"),
+            ("10.000", "10.000'e", "10.000'de"),
+            ("250.000", "250.000'e", "250.000'de"),
+            ("1.500", "1.500'e", "1.500'de"),
+            ("1.000.000", "1.000.000'a", "1.000.000'da"),
+            ("3.000.000.000", "3.000.000.000'a", "3.000.000.000'da"),
+            // A decimal comma ends the number: "bin virgül beş".
+            ("1.000,5", "1.000,5'e", "1.000,5'te"),
+            ("2,50", "2,50'ye", "2,50'de"),
+            // Dots that do not group thousands are not a grouping.
+            ("25.07.2026", "25.07.2026'ya", "25.07.2026'da"),
+            ("E.2026", "E.2026'ya", "E.2026'da"),
+            ("1234.000", "1234.000'a", "1234.000'da"),
+            ("1.00", "1.00'a", "1.00'da"),
+            ("Kat 1.000", "Kat 1.000'e", "Kat 1.000'de"),
+        ];
+        for (word, dative, locative) in expected {
+            assert_eq!(attach(word, Suffix::Dative), dative, "{word}");
+            assert_eq!(attach(word, Suffix::Locative), locative, "{word}");
+        }
+        assert_eq!(attach("1.000", Suffix::Plural), "1.000'ler");
+        assert_eq!(last_number("1.000"), "1000");
+        assert_eq!(last_number("x.1.000"), "1000");
+        assert_eq!(last_number("25.07.2026"), "2026");
+        assert_eq!(last_number(""), "");
+        assert_eq!(thousands_grouped("1000"), None);
+        assert_eq!(thousands_grouped("1.0000"), None);
+        assert_eq!(thousands_grouped(""), None);
+    }
+
+    #[test]
+    fn a_number_after_a_character_of_several_bytes_is_read_whole() {
+        let expected = [
+            ("2026–2027", "2026–2027'ye", "2026–2027'de"),
+            ("1990–2000", "1990–2000'e", "1990–2000'de"),
+            ("№5", "№5'e", "№5'te"),
+            ("Kat\u{2011}3", "Kat\u{2011}3'e", "Kat\u{2011}3'te"),
+            ("Çağrı 6", "Çağrı 6'ya", "Çağrı 6'da"),
+        ];
+        for (word, dative, locative) in expected {
+            assert_eq!(attach(word, Suffix::Dative), dative, "{word}");
+            assert_eq!(attach(word, Suffix::Locative), locative, "{word}");
+        }
+    }
+
+    #[test]
     fn abbreviations_are_spelled_out_or_read_as_words() {
         let spelled = [
             ("TBMM", "TBMM'ye", "TBMM'nin"),
@@ -742,6 +867,91 @@ mod tests {
         assert_eq!(attach("TBMM", Suffix::Plural), "TBMM'ler");
         assert_eq!(attach("TBMM", Suffix::Locative), "TBMM'de");
         assert_eq!(attach("YÖK", Suffix::Locative), "YÖK'te");
+    }
+
+    #[test]
+    fn dotted_initials_are_spelled_out() {
+        let expected = [
+            ("A.Ş.", "A.Ş.'ye", "A.Ş.'nin", "A.Ş.'de"),
+            ("A.Ş", "A.Ş'ye", "A.Ş'nin", "A.Ş'de"),
+            ("T.C.", "T.C.'ye", "T.C.'nin", "T.C.'de"),
+            ("A.B.D.", "A.B.D.'ye", "A.B.D.'nin", "A.B.D.'de"),
+            ("K.K.T.C.", "K.K.T.C.'ye", "K.K.T.C.'nin", "K.K.T.C.'de"),
+            ("T.İ.", "T.İ.'ye", "T.İ.'nin", "T.İ.'de"),
+            ("H.D.", "H.D.'ye", "H.D.'nin", "H.D.'de"),
+        ];
+        for (word, dative, genitive, locative) in expected {
+            assert_eq!(attach(word, Suffix::Dative), dative, "{word}");
+            assert_eq!(attach(word, Suffix::Genitive), genitive, "{word}");
+            assert_eq!(attach(word, Suffix::Locative), locative, "{word}");
+        }
+        assert_eq!(attach("A.Ş.", Suffix::Plural), "A.Ş.'ler");
+        // Not initials: a dotted word, a single initial, lower case.
+        assert!(!is_dotted_initials("Dr"));
+        assert!(!is_dotted_initials("K"));
+        assert!(!is_dotted_initials("a.ş"));
+        assert!(!is_dotted_initials("A..Ş"));
+        assert!(!is_dotted_initials("AB.C"));
+        assert!(!is_dotted_initials(""));
+    }
+
+    #[test]
+    fn a_single_capital_letter_is_read_by_its_name() {
+        let expected = [
+            ("A. Ş.", "A. Ş.'ye", "A. Ş.'nin", "A. Ş.'de"),
+            (
+                "Deniz Gıda A. Ş.",
+                "Deniz Gıda A. Ş.'ye",
+                "Deniz Gıda A. Ş.'nin",
+                "Deniz Gıda A. Ş.'de",
+            ),
+            ("T. C.", "T. C.'ye", "T. C.'nin", "T. C.'de"),
+            ("Ahmet K.", "Ahmet K.'ye", "Ahmet K.'nin", "Ahmet K.'de"),
+            ("Plan B", "Plan B'ye", "Plan B'nin", "Plan B'de"),
+            ("B", "B'ye", "B'nin", "B'de"),
+            // A vowel's name is the vowel: the same as reading it.
+            ("Ayşe A.", "Ayşe A.'ya", "Ayşe A.'nın", "Ayşe A.'da"),
+            ("Ali I.", "Ali I.'ya", "Ali I.'nın", "Ali I.'da"),
+            ("Ali İ.", "Ali İ.'ye", "Ali İ.'nin", "Ali İ.'de"),
+        ];
+        for (word, dative, genitive, locative) in expected {
+            assert_eq!(attach(word, Suffix::Dative), dative, "{word}");
+            assert_eq!(attach(word, Suffix::Genitive), genitive, "{word}");
+            assert_eq!(attach(word, Suffix::Locative), locative, "{word}");
+        }
+        assert_eq!(attach("A. Ş.", Suffix::Plural), "A. Ş.'ler");
+        assert_eq!(attach("Plan B", Suffix::Plural), "Plan B'ler");
+        assert!(is_single_capital("Ş"));
+        assert!(!is_single_capital("ş"));
+        assert!(!is_single_capital("AB"));
+        assert!(!is_single_capital("5"));
+        assert!(!is_single_capital(""));
+    }
+
+    #[test]
+    fn the_last_word_of_a_name_decides() {
+        let expected = [
+            (
+                "Deniz Gıda A.Ş.",
+                "Deniz Gıda A.Ş.'ye",
+                "Deniz Gıda A.Ş.'nin",
+            ),
+            ("Deniz Gıda AŞ", "Deniz Gıda AŞ'ye", "Deniz Gıda AŞ'nin"),
+            ("Ali Rıza", "Ali Rıza'ya", "Ali Rıza'nın"),
+            ("Ankara Batı", "Ankara Batı'ya", "Ankara Batı'nın"),
+        ];
+        for (word, dative, genitive) in expected {
+            assert_eq!(attach(word, Suffix::Dative), dative, "{word}");
+            assert_eq!(attach(word, Suffix::Genitive), genitive, "{word}");
+        }
+        assert_eq!(
+            attach("Deniz Gıda A.Ş.", Suffix::Plural),
+            "Deniz Gıda A.Ş.'ler"
+        );
+        assert_eq!(attach("Ali Rıza", Suffix::Plural), "Ali Rızalar");
+        assert_eq!(last_word("Deniz Gıda A.Ş"), "A.Ş");
+        assert_eq!(last_word("TBMM"), "TBMM");
+        assert_eq!(last_word(""), "");
     }
 
     #[test]
