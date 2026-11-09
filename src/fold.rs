@@ -110,13 +110,15 @@ impl FoldOptions {
     /// The merge is deliberate: text capitalised under a non-Turkish locale
     /// ("ISTINAF") and queries typed without a Turkish keyboard have already
     /// lost the difference between the two i's, and merging them makes both
-    /// match. The price is that pairs like "sık" and "sik" fold alike. The
-    /// other Turkish letters are kept: "şahin" finds "Şahin" and not "sahin".
+    /// match. The price is that pairs like "sınır" and "sinir" fold alike.
+    /// The other Turkish letters are kept: "şahin" finds "Şahin" and not
+    /// "sahin".
     ///
     /// ```
     /// use abece::{FoldOptions, search_fold_with};
     ///
     /// assert_eq!(search_fold_with("IĞDIR", &FoldOptions::SEARCH), "iğdir");
+    /// assert_eq!(search_fold_with("sınır", &FoldOptions::SEARCH), "sinir");
     /// assert_eq!(FoldOptions::default(), FoldOptions::SEARCH);
     /// ```
     pub const SEARCH: Self = Self {

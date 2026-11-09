@@ -88,7 +88,7 @@ The search fold (`FoldOptions::SEARCH`) merges `ı` into `i` and keeps `ç ğ
   caps lock on an English layout) and queries typed without a Turkish
   keyboard have already lost the difference between the two i's. There is
   no way to recover it, so the index and the query meet by merging. The
-  price is that pairs like "sık" and "sik" fold alike; in legal and
+  price is that pairs like "sınır" and "sinir" fold alike; in legal and
   bibliographic text that pair is rare and the gain is large.
 - `ş`, `ç`, `ğ`, `ö`, `ü` have no such ambiguity in the *index* side: a text
   written with them keeps them. Folding them would make "şahin" match
